@@ -18,7 +18,13 @@ def load_data():
     return pd.DataFrame(columns=["Website", "Email/Username", "Password"])
 
 def save_data(df):
+    # Save to Excel
     df.to_excel(EXCEL_FILE, index=False)
+    
+    # Save to TXT
+    with open("passwords.txt", "w") as f:
+        for _, row in df.iterrows():
+            f.write(f"{row['Website']} | {row['Email/Username']} | {row['Password']}\n")
 
 def generate_password():
     letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
