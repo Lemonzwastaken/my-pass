@@ -2,8 +2,16 @@ import tkinter as tk
 
 
 #SAVE PASSWORD
+def save_password():
+    website = website_entry.get()
+    email = email_entry.get()
+    password = password_entry.get()
 
-
+    entry = f"{website} | {email} | {password}"
+    
+    with open("passwords.txt", mode="a+r") as file:
+        contents = file.read()        
+        print(contents)
 
 
 
