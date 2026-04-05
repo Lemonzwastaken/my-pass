@@ -117,7 +117,7 @@ LOGO_W, LOGO_H = 280, 320
 
 canvas = Canvas(window, width=LOGO_W, height=LOGO_H, bg=BG, highlightthickness=0)
 canvas.grid(row=0, column=0, columnspan=3, pady=(0, 5))
-logo_img = PhotoImage(file="mypass_logo.png")
+logo_img = PhotoImage(file=resource_path("mypass_logo.png"))
 logo_img = logo_img.subsample(2, 2)
 canvas.create_image(LOGO_W // 2, 115, image=logo_img)
 canvas.create_text(LOGO_W // 2, 240, text="MyPass", font=("Helvetica", 22, "bold"), fill=RED)
