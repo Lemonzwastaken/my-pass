@@ -1,125 +1,154 @@
-import tkinter as tk
+from tkinter import *
 from tkinter import messagebox
-import random
+from random import choice, randint, shuffle
 import pyperclip
-import pandas as pd
-import os
-import sys
+import json
 
-EXCEL_FILE = "passwords.xlsx"
+#---------------------------FIND PASSWORD---------------------------#
 
-def resource_path(relative_path):
-    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base, relative_path)
+def find_password():
+    try:
+        with open("data.json", "r") as file:
+            website = website_entry.get()
+            data = json.load(file)
+            if website in data:
+                email = data[website]["email"]
+                password = data[website]["password"]
+                messagebox.showinfo(title="Details", message=f"Website:   {website}\n\nEmail:      {email}\n\nPassword:  {password}\n")
+            else:
+                messagebox.showinfo(title="Oops", message=f"\n  No details found for '{website}'.  \n")
+    except FileNotFoundError:
+        messagebox.showinfo(title="Oops", message="\n  No data file found.\n  Please save some passwords first.  \n")
 
-def load_data():
-    if os.path.exists(EXCEL_FILE):
-        return pd.read_excel(EXCEL_FILE)
-    return pd.DataFrame(columns=["Website", "Email/Username", "Password"])
-
-def save_data(df):
-    # Save to Excel
-    df.to_excel(EXCEL_FILE, index=False)
-    
-    # Save to TXT
-    with open("passwords.txt", "w") as f:
-        for _, row in df.iterrows():
-            f.write(f"{row['Website']} | {row['Email/Username']} | {row['Password']}\n")
+# ---------------------------- PASSWORD GENERATOR ------------------------------- #
 
 def generate_password():
-    letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    numbers = '0123456789'
-    symbols = '!#$%&()*+'
-    password_list = (
-        [random.choice(letters) for _ in range(random.randint(8, 10))] +
-        [random.choice(symbols) for _ in range(random.randint(2, 4))] +
-        [random.choice(numbers) for _ in range(random.randint(2, 4))]
-    )
-    random.shuffle(password_list)
-    return "".join(password_list)
+    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    symbols = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
 
-def save_pass():
-    password = generate_password()
-    password_entry.delete(0, tk.END)
+    password_letters = [choice(letters) for _ in range(randint(8, 10))]
+    password_symbols = [choice(symbols) for _ in range(randint(2, 4))]
+    password_numbers = [choice(numbers) for _ in range(randint(2, 4))]
+
+    password_list = password_letters + password_symbols + password_numbers
+    shuffle(password_list)
+
+    password = "".join(password_list)
+    password_entry.delete(0, END)
     password_entry.insert(0, password)
     pyperclip.copy(password)
-    generate_button.configure(text="Copied!", state="disabled", fg="red")
-    window.after(2000, lambda: generate_button.configure(text="Generate", state="normal", fg="white"))
+    generate_password_button.config(text="Copied!", state=DISABLED, fg="#ffcccc")
+    window.after(2000, lambda: generate_password_button.config(text="Generate Password", state=NORMAL, fg="white"))
 
-def save_password():
+# ---------------------------- SAVE PASSWORD ------------------------------- #
+
+def save():
     website = website_entry.get()
     email = email_entry.get()
     password = password_entry.get()
 
-    if not all([website, email, password]):
-        add.configure(text="Fill all fields!", state="disabled", fg="red")
-        window.after(2000, lambda: add.configure(text="Add", state="normal", fg="white"))
-        return
+    new_data = {
+        website: {
+            "email": email,
+            "password": password
+        }
+    }
 
-    check = messagebox.askokcancel(title=website, message=f"Save these details?\nEmail: {email}\nPassword: {password}")
-    if not check:
-        return
+    if len(website) == 0 or len(password) == 0:
+        messagebox.showinfo(title="Oops", message="\n  Please make sure no fields are empty.  \n")
+    else:
+        try:
+            with open("data.json", "r") as data_file:
+                data = json.load(data_file)
+        except FileNotFoundError:
+            data = {}
 
-    df = load_data()
-    duplicate = ((df["Website"] == website) & (df["Email/Username"] == email) & (df["Password"] == password)).any()
-    if duplicate:
-        add.configure(text="Already exists!", state="disabled", fg="red")
-        window.after(2000, lambda: add.configure(text="Add", state="normal", fg="white"))
-        return
+        if website in data:
+            is_ok = messagebox.askokcancel(title="Already Exists", message=f"\n  '{website}' already has a saved password.\n\n  Do you want to overwrite it?  \n")
+            if not is_ok:
+                return
 
-    new_row = pd.DataFrame([{"Website": website, "Email/Username": email, "Password": password}])
-    df = pd.concat([df, new_row], ignore_index=True)
-    save_data(df)
+        is_ok = messagebox.askokcancel(title=website, message=f"\n  Website:   {website}\n\n  Email:      {email}\n\n  Password:  {password}\n\n  Save these details?\n")
+        if is_ok:
+            data.update(new_data)
 
-    website_entry.delete(0, tk.END)
-    password_entry.delete(0, tk.END)
-    email_entry.delete(0, tk.END)
-    website_entry.focus()
+            with open("data.json", "w") as data_file:
+                json.dump(data, data_file, indent=4)
 
-# WINDOW
-window = tk.Tk()
+            with open("data.txt", "a") as txt_file:
+                txt_file.write(f"{website} | {email} | {password}\n")
+
+            website_entry.delete(0, END)
+            password_entry.delete(0, END)
+
+# ---------------------------- UI SETUP ------------------------------- #
+
+window = Tk()
 window.title("MyPass")
-window.config(padx=40, pady=30, bg="#f5f5f5")
+window.config(padx=50, pady=40, bg="#f0f2f5")
 
 FONT = ("Helvetica", 11)
-BG = "#f5f5f5"
+FONT_BOLD = ("Helvetica", 11, "bold")
+BG = "#f0f2f5"
+RED = "#e05c5c"
+BLUE = "#4a90d9"
+TEXT = "#2d2d2d"
+MUTED = "#999999"
 
-# LOGO
-canvas = tk.Canvas(width=200, height=200, bg=BG, highlightthickness=0)
-canvas.grid(row=0, column=0, columnspan=3, pady=(0, 10))
-logo = tk.PhotoImage(file=resource_path("mypass_logo.png"))
-logo = logo.subsample(3, 3)  # divides size by 3, adjust number as needed
-canvas.create_image(100, 80, image=logo)
-canvas.create_text(100, 170, text="MyPass",
-                   font=("Helvetica", 20, "bold"), fill="#e05c5c")
-canvas.create_text(100, 190, text="your passwords, saved tight",
-                   font=("Helvetica", 8), fill="#999999")
+def styled_entry(parent, **kwargs):
+    return Entry(parent, font=FONT, relief="flat", bg="white", fg=TEXT,
+                 insertbackground=TEXT, highlightthickness=1,
+                 highlightbackground="#c0c0c0", highlightcolor=BLUE, **kwargs)
 
-# LABELS
-for text, row in [("Website:", 1), ("Email/Username:", 2), ("Password:", 3)]:
-    tk.Label(text=text, font=FONT, bg=BG, fg="#333333").grid(
-        row=row, column=0, sticky="E", pady=6, padx=(0, 10))
+# Canvas / Logo
+LOGO_W, LOGO_H = 220, 220
+canvas = Canvas(window, width=LOGO_W, height=LOGO_H, bg=BG, highlightthickness=0)
+canvas.grid(row=0, column=0, columnspan=3, pady=(0, 5))
+logo_img = PhotoImage(file="mypass_logo.png")
+logo_img = logo_img.subsample(3, 3)
+canvas.create_image(LOGO_W // 2, 80, image=logo_img)
+canvas.create_text(LOGO_W // 2, 158, text="MyPass", font=("Helvetica", 22, "bold"), fill=RED)
+canvas.create_text(LOGO_W // 2, 180, text="your passwords, locked tight", font=("Helvetica", 8), fill=MUTED)
 
-# ENTRIES
-website_entry = tk.Entry(font=FONT)
+# Divider
+Frame(window, height=1, bg="#d0d0d0").grid(row=1, column=0, columnspan=3, sticky="EW", pady=(5, 20))
+
+# Labels
+website_label = Label(window, text="Website:", font=FONT_BOLD, bg=BG, fg=TEXT)
+website_label.grid(row=2, column=0, sticky="E", pady=10, padx=(0, 14))
+email_label = Label(window, text="Email/Username:", font=FONT_BOLD, bg=BG, fg=TEXT)
+email_label.grid(row=3, column=0, sticky="E", pady=10, padx=(0, 14))
+password_label = Label(window, text="Password:", font=FONT_BOLD, bg=BG, fg=TEXT)
+password_label.grid(row=4, column=0, sticky="E", pady=10, padx=(0, 14))
+
+# Entries
+website_entry = styled_entry(window, width=21)
+website_entry.grid(row=2, column=1, sticky="EW", pady=10, ipady=7)
 website_entry.focus()
-website_entry.grid(row=1, column=1, columnspan=2, sticky="EW", pady=6)
 
-email_entry = tk.Entry(font=FONT)
-email_entry.insert(0, "your@email.com")
-email_entry.grid(row=2, column=1, columnspan=2, sticky="EW", pady=6)
+email_entry = styled_entry(window, width=35)
+email_entry.grid(row=3, column=1, columnspan=2, sticky="EW", pady=10, ipady=7)
+email_entry.insert(0, "yourname@mail.com")
 
-password_entry = tk.Entry(font=FONT)
-password_entry.grid(row=3, column=1, sticky="EW", pady=6)
+password_entry = styled_entry(window, width=21)
+password_entry.grid(row=4, column=1, sticky="EW", pady=10, ipady=7)
 
-# BUTTONS
-generate_button = tk.Button(text="Generate", font=FONT, bg="#e05c5c", fg="white",
-                            relief="flat", cursor="hand2", command=save_pass)
-generate_button.grid(row=3, column=2, sticky="EW", pady=6, padx=(6, 0))
+# Buttons
+generate_password_button = Button(window, text="Generate Password", font=FONT, bg=RED, fg="white",
+                                  relief="flat", cursor="hand2", activebackground="#c94444",
+                                  activeforeground="white", padx=8, pady=7, command=generate_password)
+generate_password_button.grid(row=4, column=2, sticky="EW", pady=10, padx=(10, 0))
 
-add = tk.Button(text="Add", font=FONT, bg="#4a90d9", fg="white",
-                relief="flat", cursor="hand2", command=save_password)
-add.grid(row=4, column=1, columnspan=2, sticky="EW", pady=(14, 0))
+find_password_button = Button(window, text="Find Password", font=FONT, bg=RED, fg="white",
+                              relief="flat", cursor="hand2", activebackground="#c94444",
+                              activeforeground="white", padx=8, pady=7, command=find_password)
+find_password_button.grid(row=2, column=2, sticky="EW", pady=10, padx=(10, 0))
+
+add_button = Button(window, text="Add", width=36, font=FONT_BOLD, bg=BLUE, fg="white",
+                    relief="flat", cursor="hand2", activebackground="#357abd",
+                    activeforeground="white", pady=10, command=save)
+add_button.grid(row=5, column=1, columnspan=2, sticky="EW", pady=(20, 0))
 
 window.columnconfigure(1, weight=1)
 window.mainloop()
