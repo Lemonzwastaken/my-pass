@@ -8,11 +8,10 @@ A simple, lightweight password manager built with Python and Tkinter. Passwords 
 
 - Generate strong random passwords instantly
 - Save passwords with website and email/username
-- Saves to both `passwords.json` and `passwords.txt`
+- Saves to both `passwords.xlsx` and `passwords.txt`
 - Duplicate entry detection
 - Auto-copies generated password to clipboard
 - Clean, minimal UI
-- Searches password for specific websites(Case sensitive)
 
 ---
 
