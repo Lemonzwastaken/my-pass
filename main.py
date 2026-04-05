@@ -4,6 +4,17 @@ from random import choice, randint, shuffle
 import pyperclip
 import json
 
+
+#FIX BUILD PROBLEM
+import sys
+import os
+
+def resource_path(relative_path):
+    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, relative_path)
+
+
+
 #---------------------------FIND PASSWORD---------------------------#
 
 def find_password():
@@ -102,14 +113,15 @@ def styled_entry(parent, **kwargs):
                  highlightbackground="#c0c0c0", highlightcolor=BLUE, **kwargs)
 
 # Canvas / Logo
-LOGO_W, LOGO_H = 220, 220
+LOGO_W, LOGO_H = 280, 320
+
 canvas = Canvas(window, width=LOGO_W, height=LOGO_H, bg=BG, highlightthickness=0)
 canvas.grid(row=0, column=0, columnspan=3, pady=(0, 5))
 logo_img = PhotoImage(file="mypass_logo.png")
-logo_img = logo_img.subsample(3, 3)
-canvas.create_image(LOGO_W // 2, 80, image=logo_img)
-canvas.create_text(LOGO_W // 2, 158, text="MyPass", font=("Helvetica", 22, "bold"), fill=RED)
-canvas.create_text(LOGO_W // 2, 180, text="your passwords, locked tight", font=("Helvetica", 8), fill=MUTED)
+logo_img = logo_img.subsample(2, 2)
+canvas.create_image(LOGO_W // 2, 115, image=logo_img)
+canvas.create_text(LOGO_W // 2, 240, text="MyPass", font=("Helvetica", 22, "bold"), fill=RED)
+canvas.create_text(LOGO_W // 2, 262, text="your passwords, locked tight", font=("Helvetica", 8), fill=MUTED)
 
 # Divider
 Frame(window, height=1, bg="#d0d0d0").grid(row=1, column=0, columnspan=3, sticky="EW", pady=(5, 20))
