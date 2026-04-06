@@ -19,7 +19,7 @@ def resource_path(relative_path):
 
 def find_password():
     try:
-        with open("data.json", "r") as file:
+        with open("passwords.json", "r") as file:
             website = website_entry.get()
             data = json.load(file)
             if website in data:
@@ -70,28 +70,42 @@ def save():
         messagebox.showinfo(title="Oops", message="\n  Please make sure no fields are empty.  \n")
     else:
         try:
-            with open("data.json", "r") as data_file:
+            with open("passwords.json", "r") as data_file:
                 data = json.load(data_file)
         except FileNotFoundError:
             data = {}
 
         if website in data:
-            is_ok = messagebox.askokcancel(title="Already Exists", message=f"\n  '{website}' already has a saved password.\n\n  Do you want to overwrite it?  \n")
-            if not is_ok:
+            is_ok = messagebox.askquestion(title="Already exists", message=f"\n '{website}' already has a saved password. \n\n Do you want to overwrite it? \n")
+            if is_ok:
+                data.update(new_data)
+
+                with open("passwords.json", "w") as data_file:
+                    json.dump(data, data_file, indent=4)
+
+                with open("data.txt", "a") as txt_file:
+                    txt_file.write(f"{website} | {email} | {password}\n")
+
+                website_entry.delete(0, END)
+                password_entry.delete(0, END)
+            else:
                 return
 
-        is_ok = messagebox.askokcancel(title=website, message=f"\n  Website:   {website}\n\n  Email:      {email}\n\n  Password:  {password}\n\n  Save these details?\n")
-        if is_ok:
-            data.update(new_data)
+        else:
+            is_ok = messagebox.askokcancel(title=website, message=f"\n  Website:   {website}\n\n  Email:      {email}\n\n  Password:  {password}\n\n  Save these details?\n")
+            if is_ok:
+                data.update(new_data)
+                with open("passwords.json", "w") as data_file:
+                    json.dump(data, data_file, indent=4)
 
-            with open("data.json", "w") as data_file:
-                json.dump(data, data_file, indent=4)
+                with open("data.txt", "a") as txt_file:
+                    txt_file.write(f"{website} | {email} | {password}\n")
 
-            with open("data.txt", "a") as txt_file:
-                txt_file.write(f"{website} | {email} | {password}\n")
+                website_entry.delete(0, END)
+                password_entry.delete(0, END)
+            else:
+                return
 
-            website_entry.delete(0, END)
-            password_entry.delete(0, END)
 
 # ---------------------------- UI SETUP ------------------------------- #
 
