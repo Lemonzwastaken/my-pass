@@ -8,7 +8,8 @@ A simple, lightweight password manager built with Python and Tkinter. Passwords 
 
 - Generate strong random passwords instantly
 - Save passwords with website and email/username
-- Saves to both `passwords.xlsx` and `passwords.txt`
+- Saves to both `passwords.json` and `passwords.txt`
+- Search password feature
 - Duplicate entry detection
 - Auto-copies generated password to clipboard
 - Clean, minimal UI
@@ -27,6 +28,10 @@ pip install pandas openpyxl pyperclip
 
 ## Running the App
 
+## EXE
+Download the zip, extract it at your desired location and then run the exe as you wish
+
+## CODE
 Make sure `logo.png` is in the same folder as `main.py`, then run:
 
 ```bash
@@ -35,23 +40,6 @@ python main.py
 
 ---
 
-## File Structure
-
-```
-password-manager/
-│
-├── dist/
-│   ├── main.exe           # Compiled executable
-│   ├── passwords.txt      # Saved passwords (plain text)
-│   └── passwords.xlsx     # Saved passwords (Excel)
-│
-├── build/                 # PyInstaller build files (can be ignored)
-├── main.py                # Main application
-├── mypass_logo.png        # App logo
-└── README.md              # This file
-```
-
----
 
 ## How to Use
 
