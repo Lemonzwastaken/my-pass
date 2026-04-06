@@ -3,7 +3,7 @@ from tkinter import messagebox
 from random import choice, randint, shuffle
 import pyperclip
 import json
-
+import hashlib
 
 #FIX BUILD PROBLEM
 import sys
@@ -13,7 +13,7 @@ def resource_path(relative_path):
     base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base, relative_path)
 
-
+MASTER_PASSWORD_FILE = "master.txt"
 
 #---------------------------FIND PASSWORD---------------------------#
 
@@ -52,7 +52,107 @@ def generate_password():
     generate_password_button.config(text="Copied!", state=DISABLED, fg="#ffcccc")
     window.after(2000, lambda: generate_password_button.config(text="Generate Password", state=NORMAL, fg="white"))
 
+#---------------------------- MASTER PASSWORD ---------------------------------#
+
+#HASING PASSWORD
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def save_master_password(password):
+    with open(MASTER_PASSWORD_FILE, "w") as masterpass:
+        masterpass.write(hash_password(password))
+
+
+#SETTING UP MASTERPASSWORD
+def setup_master_password():
+
+
+    def disable_event():
+        pass
+    
+    
+    setup = Toplevel()
+    setup.protocol("WM_DELETE_WINDOW", disable_event)
+    setup.grab_set()
+    setup.lift()
+    setup.title("Set Master Password")
+    setup.config(padx=40, pady=30)
+
+    Label(setup, text="Enter master password:").pack()
+    entry1 = Entry(setup, show="*")
+    entry1.pack()
+
+    Label(setup, text="Confirm master password:").pack()
+    entry2 = Entry(setup, show="*")
+    entry2.pack()
+
+    error_label = Label(setup, text="", fg="red")
+    error_label.pack()
+
+    def confirm_setup():
+        if entry1.get() == "":
+            error_label.config(text="Password cannot be empty")
+        elif len(entry1.get()) < 2:
+            error_label.config(text="Password cannot be less than 2 letters")
+        else:
+            if entry1.get() != entry2.get():
+                error_label.config(text="Passwords do not match")
+
+            else:
+                with open("master.txt", "w") as masterfile:
+                    masterfile.write(hash_password(entry1.get()))
+                setup.destroy()
+
+    Button(setup, text="Set Password", command=confirm_setup).pack()
+
+#CHECKING FOR MASTERPASSWORD
+def check_master_password():
+
+
+    def disable_event():
+        pass
+    
+
+    login = Toplevel()
+    login.protocol("WM_DELETE_WINDOW", disable_event)
+    login.grab_set()
+    login.lift()
+    login.title("Login")
+    login.config(padx=40, pady=30)
+    Label(login, text="Enter master password:").pack()
+    
+    entry = Entry(login, show="*")
+    entry.pack()
+    
+    error_label = Label(login, text="", fg="red")
+    error_label.pack()
+
+    def attempt_login():
+        if len(entry.get()) < 1:
+            error_label.config(text="Please enter a password")
+            return
+
+        with open("master.txt", "r") as file:
+            hashed_pass = file.read()
+
+        if hash_password(entry.get()) == hashed_pass:
+            login.destroy()
+        else:
+            error_label.config(text="Incorrect password")
+            entry.delete(0, END)
+
+    Button(login, text="Unlock", command=attempt_login).pack()
+
+
+
+
+
+
+
+
+
 # ---------------------------- SAVE PASSWORD ------------------------------- #
+
 
 def save():
     website = website_entry.get()
@@ -83,8 +183,6 @@ def save():
                 with open("passwords.json", "w") as data_file:
                     json.dump(data, data_file, indent=4)
 
-                with open("data.txt", "a") as txt_file:
-                    txt_file.write(f"{website} | {email} | {password}\n")
 
                 website_entry.delete(0, END)
                 password_entry.delete(0, END)
@@ -98,8 +196,6 @@ def save():
                 with open("passwords.json", "w") as data_file:
                     json.dump(data, data_file, indent=4)
 
-                with open("data.txt", "a") as txt_file:
-                    txt_file.write(f"{website} | {email} | {password}\n")
 
                 website_entry.delete(0, END)
                 password_entry.delete(0, END)
@@ -175,6 +271,10 @@ add_button = Button(window, text="Add", width=36, font=FONT_BOLD, bg=BLUE, fg="w
                     relief="flat", cursor="hand2", activebackground="#357abd",
                     activeforeground="white", pady=10, command=save)
 add_button.grid(row=5, column=1, columnspan=2, sticky="EW", pady=(20, 0))
+
+
+check_master_password()
+
 
 window.columnconfigure(1, weight=1)
 window.mainloop()
