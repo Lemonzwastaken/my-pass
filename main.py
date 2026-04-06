@@ -18,6 +18,9 @@ MASTER_PASSWORD_FILE = "master.txt"
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+def exit():
+    os._exit(0)
+
 # ---------------------------- FIND PASSWORD ------------------------------- #
 
 def find_password():
@@ -97,6 +100,10 @@ def setup_master_password():
 
     Button(setup, text="Set Password", font=("Helvetica", 11), bg="#4a90d9", fg="white",
            relief="flat", cursor="hand2", command=confirm_setup).pack(fill="x", padx=20, pady=(5, 0))
+    
+    Button(setup, text="Close", font=("Helvetica", 11), bg="#4a90d9", fg="white",
+           relief="flat", cursor="hand2", command=exit).pack(fill="x", padx=20, pady=(5, 0))
+    
     entry2.bind("<Return>", confirm_setup)
     setup.wait_window()
 
@@ -136,6 +143,10 @@ def check_master_password():
 
     Button(login, text="Unlock", font=("Helvetica", 11), bg="#4a90d9", fg="white",
            relief="flat", cursor="hand2", command=attempt_login).pack(fill="x", padx=20, pady=(5, 0))
+    
+    Button(login, text="Close", font=("Helvetica", 11), bg="#4a90d9", fg="white",
+        relief="flat", cursor="hand2", command=exit).pack(fill="x", padx=20, pady=(5, 0))
+    
     entry.bind("<Return>", attempt_login)
     login.wait_window()
 
