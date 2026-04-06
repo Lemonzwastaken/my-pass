@@ -1,11 +1,9 @@
 from tkinter import *
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from random import choice, randint, shuffle
 import pyperclip
 import json
 import hashlib
-
-#FIX BUILD PROBLEM
 import sys
 import os
 
@@ -15,7 +13,12 @@ def resource_path(relative_path):
 
 MASTER_PASSWORD_FILE = "master.txt"
 
-#---------------------------FIND PASSWORD---------------------------#
+# ---------------------------- HASH PASSWORD ------------------------------- #
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+# ---------------------------- FIND PASSWORD ------------------------------- #
 
 def find_password():
     try:
@@ -52,107 +55,192 @@ def generate_password():
     generate_password_button.config(text="Copied!", state=DISABLED, fg="#ffcccc")
     window.after(2000, lambda: generate_password_button.config(text="Generate Password", state=NORMAL, fg="white"))
 
-#---------------------------- MASTER PASSWORD ---------------------------------#
+# ---------------------------- MASTER PASSWORD ------------------------------- #
 
-#HASING PASSWORD
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-def save_master_password(password):
-    with open(MASTER_PASSWORD_FILE, "w") as masterpass:
-        masterpass.write(hash_password(password))
-
-
-#SETTING UP MASTERPASSWORD
 def setup_master_password():
-
-
     def disable_event():
         pass
-    
-    
+
     setup = Toplevel()
     setup.protocol("WM_DELETE_WINDOW", disable_event)
     setup.grab_set()
     setup.lift()
     setup.title("Set Master Password")
-    setup.config(padx=40, pady=30)
+    setup.config(padx=40, pady=30, bg="#f0f2f5")
 
-    Label(setup, text="Enter master password:").pack()
-    entry1 = Entry(setup, show="*")
-    entry1.pack()
+    Label(setup, text="Set Master Password", font=("Helvetica", 14, "bold"), bg="#f0f2f5", fg="#2d2d2d").pack(pady=(0, 15))
+    Label(setup, text="Enter master password:", font=("Helvetica", 11), bg="#f0f2f5", fg="#2d2d2d").pack()
+    entry1 = Entry(setup, show="*", font=("Helvetica", 11), relief="flat", highlightthickness=1,
+                   highlightbackground="#c0c0c0", highlightcolor="#4a90d9", width=25)
+    entry1.pack(ipady=6, pady=5)
+    entry1.focus()
 
-    Label(setup, text="Confirm master password:").pack()
-    entry2 = Entry(setup, show="*")
-    entry2.pack()
+    Label(setup, text="Confirm master password:", font=("Helvetica", 11), bg="#f0f2f5", fg="#2d2d2d").pack()
+    entry2 = Entry(setup, show="*", font=("Helvetica", 11), relief="flat", highlightthickness=1,
+                   highlightbackground="#c0c0c0", highlightcolor="#4a90d9", width=25)
+    entry2.pack(ipady=6, pady=5)
 
-    error_label = Label(setup, text="", fg="red")
+    error_label = Label(setup, text="", font=("Helvetica", 9), bg="#f0f2f5", fg="#e05c5c")
     error_label.pack()
 
-    def confirm_setup():
+    def confirm_setup(event=None):
         if entry1.get() == "":
             error_label.config(text="Password cannot be empty")
         elif len(entry1.get()) < 2:
-            error_label.config(text="Password cannot be less than 2 letters")
+            error_label.config(text="Password must be at least 2 characters")
+        elif entry1.get() != entry2.get():
+            error_label.config(text="Passwords do not match")
         else:
-            if entry1.get() != entry2.get():
-                error_label.config(text="Passwords do not match")
+            with open(MASTER_PASSWORD_FILE, "w") as f:
+                f.write(hash_password(entry1.get()))
+            setup.destroy()
 
-            else:
-                with open("master.txt", "w") as masterfile:
-                    masterfile.write(hash_password(entry1.get()))
-                setup.destroy()
+    Button(setup, text="Set Password", font=("Helvetica", 11), bg="#4a90d9", fg="white",
+           relief="flat", cursor="hand2", command=confirm_setup).pack(fill="x", padx=20, pady=(5, 0))
+    entry2.bind("<Return>", confirm_setup)
+    setup.wait_window()
 
-    Button(setup, text="Set Password", command=confirm_setup).pack()
-
-#CHECKING FOR MASTERPASSWORD
 def check_master_password():
-
-
     def disable_event():
         pass
-    
 
     login = Toplevel()
     login.protocol("WM_DELETE_WINDOW", disable_event)
     login.grab_set()
     login.lift()
     login.title("Login")
-    login.config(padx=40, pady=30)
-    Label(login, text="Enter master password:").pack()
-    
-    entry = Entry(login, show="*")
-    entry.pack()
-    
-    error_label = Label(login, text="", fg="red")
+    login.config(padx=40, pady=30, bg="#f0f2f5")
+
+    Label(login, text="Welcome Back!", font=("Helvetica", 14, "bold"), bg="#f0f2f5", fg="#2d2d2d").pack(pady=(0, 15))
+    Label(login, text="Enter master password:", font=("Helvetica", 11), bg="#f0f2f5", fg="#2d2d2d").pack()
+
+    entry = Entry(login, show="*", font=("Helvetica", 11), relief="flat", highlightthickness=1,
+                  highlightbackground="#c0c0c0", highlightcolor="#4a90d9", width=25)
+    entry.pack(ipady=6, pady=5)
+    entry.focus()
+
+    error_label = Label(login, text="", font=("Helvetica", 9), bg="#f0f2f5", fg="#e05c5c")
     error_label.pack()
 
-    def attempt_login():
+    def attempt_login(event=None):
         if len(entry.get()) < 1:
             error_label.config(text="Please enter a password")
             return
-
-        with open("master.txt", "r") as file:
+        with open(MASTER_PASSWORD_FILE, "r") as file:
             hashed_pass = file.read()
-
         if hash_password(entry.get()) == hashed_pass:
             login.destroy()
         else:
             error_label.config(text="Incorrect password")
             entry.delete(0, END)
 
-    Button(login, text="Unlock", command=attempt_login).pack()
+    Button(login, text="Unlock", font=("Helvetica", 11), bg="#4a90d9", fg="white",
+           relief="flat", cursor="hand2", command=attempt_login).pack(fill="x", padx=20, pady=(5, 0))
+    entry.bind("<Return>", attempt_login)
+    login.wait_window()
 
+def change_master_password():
+    change = Toplevel()
+    change.grab_set()
+    change.lift()
+    change.title("Change Password")
+    change.config(padx=40, pady=30, bg="#f0f2f5")
 
+    Label(change, text="Change Master Password", font=("Helvetica", 14, "bold"), bg="#f0f2f5", fg="#2d2d2d").pack(pady=(0, 15))
+    Label(change, text="Current password:", font=("Helvetica", 11), bg="#f0f2f5", fg="#2d2d2d").pack()
+    current_entry = Entry(change, show="*", font=("Helvetica", 11), relief="flat", highlightthickness=1,
+                          highlightbackground="#c0c0c0", highlightcolor="#4a90d9", width=25)
+    current_entry.pack(ipady=6, pady=5)
+    current_entry.focus()
 
+    Label(change, text="New password:", font=("Helvetica", 11), bg="#f0f2f5", fg="#2d2d2d").pack()
+    new_entry = Entry(change, show="*", font=("Helvetica", 11), relief="flat", highlightthickness=1,
+                      highlightbackground="#c0c0c0", highlightcolor="#4a90d9", width=25)
+    new_entry.pack(ipady=6, pady=5)
 
+    Label(change, text="Confirm new password:", font=("Helvetica", 11), bg="#f0f2f5", fg="#2d2d2d").pack()
+    confirm_entry = Entry(change, show="*", font=("Helvetica", 11), relief="flat", highlightthickness=1,
+                          highlightbackground="#c0c0c0", highlightcolor="#4a90d9", width=25)
+    confirm_entry.pack(ipady=6, pady=5)
 
+    error_label = Label(change, text="", font=("Helvetica", 9), bg="#f0f2f5", fg="#e05c5c")
+    error_label.pack()
 
+    def confirm_change(event=None):
+        with open(MASTER_PASSWORD_FILE, "r") as f:
+            saved_hash = f.read()
 
+        if hash_password(current_entry.get()) != saved_hash:
+            error_label.config(text="Current password is incorrect")
+            current_entry.delete(0, END)
+        elif len(new_entry.get()) < 2:
+            error_label.config(text="New password too short")
+        elif new_entry.get() != confirm_entry.get():
+            error_label.config(text="New passwords do not match")
+        else:
+            with open(MASTER_PASSWORD_FILE, "w") as f:
+                f.write(hash_password(new_entry.get()))
+            change.destroy()
+            messagebox.showinfo(title="Success", message="\n  Master password changed successfully!  \n")
 
+    Button(change, text="Change Password", font=("Helvetica", 11), bg="#4a90d9", fg="white",
+           relief="flat", cursor="hand2", command=confirm_change).pack(fill="x", padx=20, pady=(5, 0))
+    confirm_entry.bind("<Return>", confirm_change)
+
+# ---------------------------- VIEW ALL PASSWORDS ------------------------------- #
+
+def view_all_passwords():
+    try:
+        with open("passwords.json", "r") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        messagebox.showinfo(title="Oops", message="\n  No data file found.\n  Please save some passwords first.  \n")
+        return
+
+    view = Toplevel()
+    view.title("All Passwords")
+    view.config(padx=20, pady=20, bg="#f0f2f5")
+    view.grab_set()
+    view.lift()
+
+    Label(view, text="Saved Passwords", font=("Helvetica", 14, "bold"), bg="#f0f2f5", fg="#2d2d2d").pack(pady=(0, 10))
+
+    # table
+    cols = ("Website", "Email/Username", "Password")
+    tree = ttk.Treeview(view, columns=cols, show="headings", height=10)
+
+    style = ttk.Style()
+    style.theme_use("clam")
+    style.configure("Treeview", font=("Helvetica", 10), rowheight=28, bg="white", fieldbackground="white")
+    style.configure("Treeview.Heading", font=("Helvetica", 10, "bold"), bg="#e05c5c", fg="white")
+    style.map("Treeview", background=[("selected", "#4a90d9")])
+
+    for col in cols:
+        tree.heading(col, text=col)
+        tree.column(col, width=180, anchor="w")
+
+    for website, details in data.items():
+        tree.insert("", END, values=(website, details["email"], details["password"]))
+
+    # scrollbar
+    scrollbar = ttk.Scrollbar(view, orient="vertical", command=tree.yview)
+    tree.configure(yscrollcommand=scrollbar.set)
+    tree.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    # copy on click
+    def on_click(event):
+        item = tree.focus()
+        if item:
+            password = tree.item(item)["values"][2]
+            pyperclip.copy(str(password))
+            messagebox.showinfo(title="Copied", message="\n  Password copied to clipboard!  \n")
+
+    tree.bind("<Double-1>", on_click)
+    Label(view, text="Double-click a row to copy the password", font=("Helvetica", 8),
+          bg="#f0f2f5", fg="#999999").pack(pady=(8, 0))
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
-
 
 def save():
     website = website_entry.get()
@@ -177,37 +265,34 @@ def save():
 
         if website in data:
             is_ok = messagebox.askquestion(title="Already exists", message=f"\n '{website}' already has a saved password. \n\n Do you want to overwrite it? \n")
-            if is_ok:
+            if is_ok == "yes":
                 data.update(new_data)
-
                 with open("passwords.json", "w") as data_file:
                     json.dump(data, data_file, indent=4)
-
-
                 website_entry.delete(0, END)
                 password_entry.delete(0, END)
-            else:
-                return
-
         else:
             is_ok = messagebox.askokcancel(title=website, message=f"\n  Website:   {website}\n\n  Email:      {email}\n\n  Password:  {password}\n\n  Save these details?\n")
             if is_ok:
                 data.update(new_data)
                 with open("passwords.json", "w") as data_file:
                     json.dump(data, data_file, indent=4)
-
-
                 website_entry.delete(0, END)
                 password_entry.delete(0, END)
-            else:
-                return
-
 
 # ---------------------------- UI SETUP ------------------------------- #
 
 window = Tk()
 window.title("MyPass")
 window.config(padx=50, pady=40, bg="#f0f2f5")
+window.withdraw()
+
+if os.path.exists(MASTER_PASSWORD_FILE):
+    check_master_password()
+else:
+    setup_master_password()
+
+window.deiconify()
 
 FONT = ("Helvetica", 11)
 FONT_BOLD = ("Helvetica", 11, "bold")
@@ -224,7 +309,6 @@ def styled_entry(parent, **kwargs):
 
 # Canvas / Logo
 LOGO_W, LOGO_H = 280, 320
-
 canvas = Canvas(window, width=LOGO_W, height=LOGO_H, bg=BG, highlightthickness=0)
 canvas.grid(row=0, column=0, columnspan=3, pady=(0, 5))
 logo_img = PhotoImage(file=resource_path("mypass_logo.png"))
@@ -237,12 +321,9 @@ canvas.create_text(LOGO_W // 2, 262, text="your passwords, locked tight", font=(
 Frame(window, height=1, bg="#d0d0d0").grid(row=1, column=0, columnspan=3, sticky="EW", pady=(5, 20))
 
 # Labels
-website_label = Label(window, text="Website:", font=FONT_BOLD, bg=BG, fg=TEXT)
-website_label.grid(row=2, column=0, sticky="E", pady=10, padx=(0, 14))
-email_label = Label(window, text="Email/Username:", font=FONT_BOLD, bg=BG, fg=TEXT)
-email_label.grid(row=3, column=0, sticky="E", pady=10, padx=(0, 14))
-password_label = Label(window, text="Password:", font=FONT_BOLD, bg=BG, fg=TEXT)
-password_label.grid(row=4, column=0, sticky="E", pady=10, padx=(0, 14))
+Label(window, text="Website:", font=FONT_BOLD, bg=BG, fg=TEXT).grid(row=2, column=0, sticky="E", pady=10, padx=(0, 14))
+Label(window, text="Email/Username:", font=FONT_BOLD, bg=BG, fg=TEXT).grid(row=3, column=0, sticky="E", pady=10, padx=(0, 14))
+Label(window, text="Password:", font=FONT_BOLD, bg=BG, fg=TEXT).grid(row=4, column=0, sticky="E", pady=10, padx=(0, 14))
 
 # Entries
 website_entry = styled_entry(window, width=21)
@@ -267,14 +348,20 @@ find_password_button = Button(window, text="Find Password", font=FONT, bg=RED, f
                               activeforeground="white", padx=8, pady=7, command=find_password)
 find_password_button.grid(row=2, column=2, sticky="EW", pady=10, padx=(10, 0))
 
-add_button = Button(window, text="Add", width=36, font=FONT_BOLD, bg=BLUE, fg="white",
+add_button = Button(window, text="Add", font=FONT_BOLD, bg=BLUE, fg="white",
                     relief="flat", cursor="hand2", activebackground="#357abd",
                     activeforeground="white", pady=10, command=save)
 add_button.grid(row=5, column=1, columnspan=2, sticky="EW", pady=(20, 0))
 
+view_button = Button(window, text="View All Passwords", font=FONT, bg=BLUE, fg="white",
+                     relief="flat", cursor="hand2", activebackground="#357abd",
+                     activeforeground="white", pady=7, command=view_all_passwords)
+view_button.grid(row=6, column=1, columnspan=2, sticky="EW", pady=(8, 0))
 
-check_master_password()
-
+change_password_button = Button(window, text="Change Master Password", font=FONT, bg="#888888", fg="white",
+                                relief="flat", cursor="hand2", activebackground="#666666",
+                                activeforeground="white", pady=7, command=change_master_password)
+change_password_button.grid(row=7, column=1, columnspan=2, sticky="EW", pady=(8, 0))
 
 window.columnconfigure(1, weight=1)
 window.mainloop()
