@@ -7,6 +7,7 @@ from systems.auth import setup_master_password, check_master_password, change_ma
 from systems.passwords import find_password, save_password, view_all_passwords
 from systems.tray import setup_tray
 from systems.themes import *
+load_theme()
 import pyperclip
 
 #THIS IS ONLY FOR FIXING THE FINAL BUILD
@@ -157,6 +158,13 @@ theme_button.grid(row=8, column=1, columnspan=2, sticky="EW", pady=(8, 0))
 
 # Setup tray
 setup_tray(window)
+
+apply_theme()  # ✅ ADD THIS (this is the REAL fix)
+
+if is_dark():
+    theme_button.config(text="Light Mode☀️")
+else:
+    theme_button.config(text="🌙 Dark Mode")
 
 window.columnconfigure(1, weight=1)
 window.mainloop()

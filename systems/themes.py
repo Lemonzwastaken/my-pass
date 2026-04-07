@@ -1,4 +1,7 @@
-# theme.py
+import json
+import os
+
+THEME_FILE = "theme.json"
 
 LIGHT = {
     "bg": "#f0f2f5",
@@ -24,13 +27,34 @@ DARK = {
 
 current_theme = LIGHT
 
-def is_dark():
-    return current_theme == DARK
 
-def get_theme():
-    return current_theme
+def load_theme():
+    global current_theme
+    if os.path.exists(THEME_FILE):
+        try:
+            with open(THEME_FILE, "r") as f:
+                data = json.load(f)
+                current_theme = DARK if data.get("theme") == "dark" else LIGHT
+        except:
+            current_theme = LIGHT
+
+
+def save_theme():
+    with open(THEME_FILE, "w") as f:
+        json.dump({
+            "theme": "dark" if current_theme == DARK else "light"
+        }, f)
+
 
 def toggle_theme():
     global current_theme
     current_theme = DARK if current_theme == LIGHT else LIGHT
+    save_theme()
 
+
+def get_theme():
+    return current_theme
+
+
+def is_dark():
+    return current_theme == DARK
