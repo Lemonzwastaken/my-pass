@@ -4,16 +4,17 @@ from tkinter import *
 
 MASTER_PASSWORD_FILE = "master.txt"
 
+_session = {"master_password": None}
 
-#HASH PASS
+def set_session_password(password):
+    _session["master_password"] = password
+
+def get_session_password():
+    return _session["master_password"]
+
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-
-
-
-
-#SETUP MASTER PASSWORD
 def setup_master_password(window):
     def disable_event():
         os._exit(0)
@@ -50,6 +51,7 @@ def setup_master_password(window):
         else:
             with open(MASTER_PASSWORD_FILE, "w") as f:
                 f.write(hash_password(entry1.get()))
+            set_session_password(entry1.get())
             setup.destroy()
 
     Button(setup, text="Set Password", font=("Helvetica", 11), bg="#4a90d9", fg="white",
@@ -59,10 +61,6 @@ def setup_master_password(window):
     entry2.bind("<Return>", confirm_setup)
     setup.wait_window()
 
-
-
-
-#CHECK MASTER PASSWORD
 def check_master_password():
     def disable_event():
         os._exit(0)
@@ -92,6 +90,7 @@ def check_master_password():
         with open(MASTER_PASSWORD_FILE, "r") as file:
             hashed_pass = file.read()
         if hash_password(entry.get()) == hashed_pass:
+            set_session_password(entry.get())
             login.destroy()
         else:
             error_label.config(text="Incorrect password")
@@ -104,9 +103,6 @@ def check_master_password():
     entry.bind("<Return>", attempt_login)
     login.wait_window()
 
-
-
-#CHANGE MASTER PASSWORD
 def change_master_password():
     change = Toplevel()
     change.grab_set()
@@ -147,6 +143,7 @@ def change_master_password():
         else:
             with open(MASTER_PASSWORD_FILE, "w") as f:
                 f.write(hash_password(new_entry.get()))
+            set_session_password(new_entry.get())
             change.destroy()
             from tkinter import messagebox
             messagebox.showinfo(title="Success", message="\n  Master password changed successfully!  \n")

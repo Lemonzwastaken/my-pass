@@ -1,11 +1,15 @@
 import threading
 import pystray
 from PIL import Image
+import sys
 import os
 
 def resource_path(relative_path):
-    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base, relative_path)
+    try:
+        base_path = sys._MEIPASS  # PyInstaller temp folder
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 
 def setup_tray(window):

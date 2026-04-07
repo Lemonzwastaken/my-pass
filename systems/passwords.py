@@ -2,33 +2,38 @@ import json
 from tkinter import *
 from tkinter import messagebox, ttk
 import pyperclip
+from systems.auth import get_session_password
+from systems.encryption import encrypt_password, decrypt_password
 
 DATA_FILE = "passwords.json"
 
 def find_password(website_entry):
+    master = get_session_password()
     try:
         with open(DATA_FILE, "r") as file:
             data = json.load(file)
             website = website_entry.get()
             if website in data:
                 email = data[website]["email"]
-                password = data[website]["password"]
-                messagebox.showinfo(title="Details", message=f"Website:   {website}\n\nEmail:      {email}\n\nPassword:  {password}\n")
+                decrypted = decrypt_password(master, data[website]["password"])
+                messagebox.showinfo(title="Details", message=f"Website:   {website}\n\nEmail:      {email}\n\nPassword:  {decrypted}\n")
             else:
                 messagebox.showinfo(title="Oops", message=f"\n  No details found for '{website}'.  \n")
     except FileNotFoundError:
         messagebox.showinfo(title="Oops", message="\n  No data file found.\n  Please save some passwords first.  \n")
 
 def save_password(website_entry, email_entry, password_entry):
+    master = get_session_password()
     website = website_entry.get()
     email = email_entry.get()
     password = password_entry.get()
 
-    new_data = {website: {"email": email, "password": password}}
-
     if len(website) == 0 or len(password) == 0:
         messagebox.showinfo(title="Oops", message="\n  Please make sure no fields are empty.  \n")
         return
+
+    encrypted = encrypt_password(master, password)
+    new_data = {website: {"email": email, "password": encrypted}}
 
     try:
         with open(DATA_FILE, "r") as data_file:
@@ -55,7 +60,6 @@ def delete_password(website):
     try:
         with open(DATA_FILE, "r") as file:
             data = json.load(file)
-
         if website in data:
             confirm = messagebox.askokcancel(title="Delete", message=f"\n  Delete password for '{website}'?  \n")
             if confirm:
@@ -66,12 +70,12 @@ def delete_password(website):
                 return True
         else:
             messagebox.showerror(title="Error", message="\n  No such password found.  \n")
-
     except FileNotFoundError:
         messagebox.showerror(title="Error", message="\n  No data file found.  \n")
     return False
 
 def view_all_passwords():
+    master = get_session_password()
     try:
         with open(DATA_FILE, "r") as file:
             data = json.load(file)
@@ -106,7 +110,11 @@ def view_all_passwords():
             with open(DATA_FILE, "r") as file:
                 d = json.load(file)
             for w, details in d.items():
-                tree.insert("", END, values=(w, details["email"], details["password"]))
+                try:
+                    decrypted = decrypt_password(master, details["password"])
+                except Exception:
+                    decrypted = details["password"]
+                tree.insert("", END, values=(w, details["email"], decrypted))
         except FileNotFoundError:
             pass
 

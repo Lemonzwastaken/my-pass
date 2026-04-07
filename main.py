@@ -1,19 +1,22 @@
 from tkinter import *
 import os
-
+import sys
 
 from systems.password_generator import generate_password
 from systems.auth import setup_master_password, check_master_password, change_master_password, MASTER_PASSWORD_FILE
 from systems.passwords import find_password, save_password, view_all_passwords
 from systems.tray import setup_tray
 from systems.themes import *
+import pyperclip
 
 #THIS IS ONLY FOR FIXING THE FINAL BUILD
-def resource_path(relative_path):
-    base = os.path.dirname(os.path.abspath(__file__))  # stays in current folder
-    return os.path.join(base, relative_path)
 
-import pyperclip
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS  # PyInstaller temp folder
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 # ---------------------------- UI SETUP ------------------------------- #
 
