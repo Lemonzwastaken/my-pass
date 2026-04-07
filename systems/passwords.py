@@ -51,6 +51,26 @@ def save_password(website_entry, email_entry, password_entry):
     website_entry.delete(0, END)
     password_entry.delete(0, END)
 
+def delete_password(website):
+    try:
+        with open(DATA_FILE, "r") as file:
+            data = json.load(file)
+
+        if website in data:
+            confirm = messagebox.askokcancel(title="Delete", message=f"\n  Delete password for '{website}'?  \n")
+            if confirm:
+                del data[website]
+                with open(DATA_FILE, "w") as file:
+                    json.dump(data, file, indent=4)
+                messagebox.showinfo(title="Deleted", message=f"\n  '{website}' has been deleted.  \n")
+                return True
+        else:
+            messagebox.showerror(title="Error", message="\n  No such password found.  \n")
+
+    except FileNotFoundError:
+        messagebox.showerror(title="Error", message="\n  No data file found.  \n")
+    return False
+
 def view_all_passwords():
     try:
         with open(DATA_FILE, "r") as file:
@@ -107,20 +127,12 @@ def view_all_passwords():
     def delete_selected():
         item = tree.focus()
         if not item:
-            messagebox.showinfo(title="Oops", message="\n  Please select an entry to delete.  \n")
+            messagebox.showinfo(title="Oops", message="\n  Please select an entry first.  \n")
             return
         website = tree.item(item)["values"][0]
-        confirm = messagebox.askokcancel(title="Delete", message=f"\n  Delete password for '{website}'?  \n")
-        if confirm:
-            try:
-                with open(DATA_FILE, "r") as f:
-                    data = json.load(f)
-                del data[website]
-                with open(DATA_FILE, "w") as f:
-                    json.dump(data, f, indent=4)
-                refresh_tree()
-            except (FileNotFoundError, KeyError):
-                pass
+        deleted = delete_password(website)
+        if deleted:
+            refresh_tree()
 
     tree.bind("<Double-1>", on_double_click)
 
